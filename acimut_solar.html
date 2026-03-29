@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f5a623">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Acimut Solar">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<title>Acimut Solar — Método de Alturas</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --accent2: #f5a623;
+    --text: #eaeaea;
+    --text-dim: #a0a0b0;
+    --success: #4ade80;
+    --input-bg: #1e2a4a;
+    --border: #2a3a5e;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  header h1 {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-size: 0.82em;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 0.78em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+  }
+
+  .mode-card p {
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .mode-card strong {
+    color: var(--accent2);
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 0.82em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1.05em;
+    font-family: "SF Mono", "Fira Code", monospace;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent2);
+  }
+
+  .field input::placeholder {
+    color: #555;
+  }
+
+  .field select {
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a0b0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .field input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .field input::-webkit-inner-spin-button,
+  .field input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+
+  .gps-status {
+    font-size: 0.75em;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .gps-status.loading { background: #2a2a4e; color: var(--accent2); }
+  .gps-status.success { background: #1a3a2a; color: var(--success); }
+  .gps-status.error { background: #3a1a1a; color: var(--accent); }
+
+  .btn-gps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #0f3460, #1a1a4e);
+    color: var(--accent2);
+    border: 2px dashed var(--accent2);
+    border-radius: var(--radius);
+    font-size: 1.05em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, opacity 0.2s;
+  }
+
+  .btn-gps:active {
+    transform: scale(0.98);
+  }
+
+  .btn-gps:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    border-style: solid;
+  }
+
+  .btn-gps.loading {
+    border-style: solid;
+    opacity: 0.7;
+    cursor: wait;
+  }
+
+  .btn-gps.success {
+    border-color: var(--success);
+    color: var(--success);
+    border-style: solid;
+  }
+
+  .coords-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0;
+    font-size: 0.78em;
+    color: var(--text-dim);
+  }
+
+  .coords-divider::before,
+  .coords-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .gps-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .gps-status.loading .gps-dot { background: var(--accent2); animation: pulse 1s infinite; }
+  .gps-status.success .gps-dot { background: var(--success); }
+  .gps-status.error .gps-dot { background: var(--accent); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #c73a52);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1.15em;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.2s;
+    margin-bottom: 12px;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85em;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+
+  .btn-secondary:last-child {
+    margin-bottom: 0;
+  }
+
+  .results {
+    display: none;
+  }
+
+  .results.visible {
+    display: block;
+  }
+
+  .result-main {
+    background: linear-gradient(135deg, #0f3460, #1a1a4e);
+    border: 2px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .result-main .label {
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 6px;
+  }
+
+  .result-main .value {
+    font-size: 2.4em;
+    font-weight: 800;
+    font-family: "SF Mono", "Fira Code", monospace;
+    color: white;
+    line-height: 1.1;
+  }
+
+  .result-main .unit {
+    font-size: 0.4em;
+    color: var(--accent2);
+    font-weight: 500;
+    vertical-align: super;
+  }
+
+  .result-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .result-secondary .label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .result-secondary .value {
+    font-size: 1.6em;
+    font-weight: 700;
+    font-family: "SF Mono", "Fira Code", monospace;
+    color: var(--text);
+  }
+
+  .corrections-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+  }
+
+  .corrections-table tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .corrections-table tr:last-child { border-bottom: none; }
+
+  .corrections-table td {
+    padding: 8px 4px;
+  }
+
+  .corrections-table td:first-child {
+    color: var(--text-dim);
+  }
+
+  .corrections-table td:last-child {
+    text-align: right;
+    font-family: "SF Mono", "Fira Code", monospace;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .quadrant-indicator {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    background: var(--surface2);
+    color: var(--accent2);
+    margin-top: 6px;
+  }
+
+  .error-msg {
+    background: #3a1a1a;
+    color: var(--accent);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  .info-note {
+    font-size: 0.75em;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 8px;
+    line-height: 1.4;
+  }
+
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82em;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px 0;
+    margin-bottom: 8px;
+    user-select: none;
+  }
+
+  .advanced-toggle .arrow {
+    transition: transform 0.2s;
+    font-size: 0.7em;
+  }
+
+  .advanced-toggle.open .arrow {
+    transform: rotate(90deg);
+  }
+
+  .advanced-content {
+    display: none;
+  }
+
+  .advanced-content.visible {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Acimut Solar</h1>
+    <p>Método de alturas · Manual siempre disponible · GPS por HTTPS</p>
+  </header>
+
+  <div class="section mode-card">
+    <div class="section-title">Modo de uso</div>
+    <p id="appModeText"></p>
+    <button class="btn-secondary" id="installBtn" hidden>Instalar en el móvil</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Fecha y hora</div>
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="fecha">
+    </div>
+    <div class="field">
+      <label>Hora UTC (hh:mm:ss)</label>
+      <div class="field-row">
+        <input type="number" id="horaH" min="0" max="23" placeholder="hh" style="width:30%">
+        <span style="color:var(--text-dim); font-size:1.2em;">:</span>
+        <input type="number" id="horaM" min="0" max="59" placeholder="mm" style="width:30%">
+        <span style="color:var(--text-dim); font-size:1.2em;">:</span>
+        <input type="number" id="horaS" min="0" max="59" placeholder="ss" style="width:30%">
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="autoFillDateTime()">Actualizar fecha/hora</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Coordenadas</div>
+
+    <div id="gpsBlock">
+      <button class="btn-gps" id="gpsBtn" onclick="requestGPS()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+        <span id="gpsBtnText">Obtener mi ubicación</span>
+      </button>
+      <div id="gpsStatus" class="gps-status" style="display:none;">
+        <span class="gps-dot"></span>
+        <span id="gpsText"></span>
+      </div>
+    </div>
+
+    <div class="coords-divider">
+      <span>o introduce las coordenadas manualmente</span>
+    </div>
+
+    <div class="field">
+      <label>Latitud (grados decimales)</label>
+      <div class="field-row">
+        <input type="number" id="latitud" step="0.000001" placeholder="ej. 40.4168">
+        <select id="latHem" style="width:80px; flex-shrink:0;">
+          <option value="N">N</option>
+          <option value="S">S</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Longitud (grados decimales)</label>
+      <div class="field-row">
+        <input type="number" id="longitud" step="0.000001" placeholder="ej. 3.7038">
+        <select id="lonHem" style="width:80px; flex-shrink:0;">
+          <option value="W">W</option>
+          <option value="E">E</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Lecturas del teodolito</div>
+    <div class="field">
+      <label>Lectura vertical al sol (gon)</label>
+      <input type="number" id="lecturaV" step="0.0001" placeholder="ej. 55.3200">
+    </div>
+    <div class="field">
+      <label>Lectura Hz al sol (gon)</label>
+      <input type="number" id="lecturaHzSol" step="0.0001" placeholder="ej. 123.4567">
+    </div>
+    <div class="field">
+      <label>Lectura Hz a la referencia (gon)</label>
+      <input type="number" id="lecturaHzRef" step="0.0001" placeholder="ej. 0.0000">
+    </div>
+
+    <div class="advanced-toggle" onclick="toggleAdvanced()">
+      <span class="arrow">&#9654;</span>
+      <span>Opciones avanzadas</span>
+    </div>
+    <div id="advancedContent" class="advanced-content">
+      <div class="field">
+        <label>Tipo de lectura vertical</label>
+        <select id="tipoVertical">
+          <option value="cenital">Ángulo cenital (0 gon = cénit)</option>
+          <option value="elevacion">Ángulo de elevación (0 gon = horizonte)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Presión atmosférica (hPa)</label>
+        <input type="number" id="presion" step="1" value="1013" placeholder="1013">
+      </div>
+      <div class="field">
+        <label>Temperatura (°C)</label>
+        <input type="number" id="temperatura" step="1" value="20" placeholder="20">
+      </div>
+    </div>
+  </div>
+
+  <div id="errorMsg" class="error-msg"></div>
+
+  <button class="btn-primary" onclick="calcular()">Calcular Acimut</button>
+
+  <div id="results" class="results">
+    <div class="result-main">
+      <div class="label">Acimut de la referencia</div>
+      <div class="value"><span id="azRef">—</span><span class="unit"> gon</span></div>
+      <div id="quadrant" class="quadrant-indicator"></div>
+    </div>
+
+    <div class="result-secondary">
+      <div class="label">Acimut del sol</div>
+      <div class="value"><span id="azSol">—</span><span class="unit" style="font-size:0.5em;"> gon</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Desglose del cálculo</div>
+      <table class="corrections-table">
+        <tr><td>Declinación solar (δ)</td><td id="decl">—</td></tr>
+        <tr><td>Ecuación del tiempo</td><td id="eot">—</td></tr>
+        <tr><td>Altura observada</td><td id="altObs">—</td></tr>
+        <tr><td>Corrección refracción</td><td id="corrRefr">—</td></tr>
+        <tr><td>Corrección paralaje</td><td id="corrPar">—</td></tr>
+        <tr><td>Altura verdadera (h)</td><td id="altVerd">—</td></tr>
+        <tr><td>Ángulo horario (H)</td><td id="angHor">—</td></tr>
+        <tr><td>Hz sol − Hz ref</td><td id="diffHz">—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="info-note">
+    Declinación solar: algoritmo Jean Meeus.<br>
+    Refracción: fórmula de Bennett ajustada por P y T.<br>
+    Paralaje solar: 8.794″ · cos(h).<br>
+    Sin red si abres el archivo. Con HTTPS: GPS, instalación y offline tras la primera visita.
+  </div>
+</div>
+
+<script src="./app.js" defer></script>
+</body>
+</html>
